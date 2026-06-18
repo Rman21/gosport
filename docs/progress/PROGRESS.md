@@ -1151,9 +1151,11 @@ Result:
 - Canceled the stale run `27794711364`.
 - Pushed commit `ea07d2b` (`Harden GitHub CI Playwright runner`) to `main`.
 - GitHub Actions run `27795147222` passed in `3m19s`.
+- GitHub Actions run `27795299221` passed on the latest `main` commit in `3m14s`.
 - Remote CI now covers lint, typecheck, API build, web build, Cloudflare Worker artifact build, Prisma migration/seed against PostgreSQL 17, Playwright browser verification, and E2E.
+- Attempted to enable branch protection on `main`, but GitHub returned `403`: the current private repository plan requires GitHub Pro or a public repository for branch protection.
 
 Next action:
 
-- Add branch protection for `main`.
+- Decide whether to upgrade GitHub, make the repository public later, or keep manual PR discipline until branch protection is available.
 - When Cloudflare nameserver activation is complete, create production deploy secrets and deploy the web Worker for `gosport.co.il` / `www.gosport.co.il`.

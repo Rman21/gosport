@@ -37,10 +37,12 @@ Status as of 2026-06-19:
 - First full project commit has been pushed to `main`.
 - CI uses the official Playwright container so E2E does not depend on a slow browser install step.
 - First hardened GitHub Actions run passed: lint, typecheck, API build, web build, Cloudflare Worker artifact build, Prisma migration/seed, and Playwright E2E.
+- Branch protection could not be enabled on the current private repository plan: GitHub returned `403` and requires GitHub Pro or a public repository for this feature.
 
 Next source-control action:
 
-- Add branch protection for `main` after the first CI pass.
+- Choose whether to upgrade GitHub, make the repository public later, or keep manual PR discipline until branch protection is available.
+- Add branch protection for `main` as soon as the plan supports it: required `Verify` status check, no force pushes, and no branch deletions.
 
 ### Cloudflare
 
