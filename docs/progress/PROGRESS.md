@@ -1124,3 +1124,24 @@ Verification:
 Next action:
 
 - Stage, commit, and push to `Rman21/gosport`.
+
+### 2026-06-19 02:15 IDT - GitHub CI Playwright hardening
+
+Objective: finish the first remote CI run after the initial GitHub push.
+
+Changed:
+
+- Pushed the first full project commit to `Rman21/gosport` on `main`.
+- Updated GitHub Actions to run inside the official Playwright Chromium image.
+- Switched CI database access from `localhost` to the GitHub service hostname `postgres`, which is required inside a job container.
+- Added workflow concurrency so newer pushes can cancel stale runs on the same branch.
+- Updated `docs/implementation-readiness/FIRST_MONTH_TOOLING_AND_PAYMENTS_PLAN.md` with the current source-control state.
+
+Reason:
+
+- The first GitHub Actions run passed lint, typecheck, API build, web build, Cloudflare artifact build, and database preparation, then spent too long on `playwright install --with-deps chromium`.
+- Using the official Playwright image removes that fragile install step and makes E2E CI closer to the local verified browser runner.
+
+Next action:
+
+- Cancel the stale CI run, push the workflow hardening commit, and confirm the new run is green.

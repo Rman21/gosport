@@ -24,23 +24,23 @@ Do not expose real public payments until these are complete:
 - Add GitHub Actions for lint, typecheck, tests, build, and Cloudflare dry-run.
 - Store production secrets only in provider dashboards or GitHub Actions secrets.
 
-Reason: the current local workspace is not a git repository, so production deployment history and rollback are not yet durable.
+Reason: production deployment history, rollback, and future Cloudflare/API releases must be reproducible from GitHub instead of a local-only workspace.
 
 Status as of 2026-06-19:
 
 - Private repository exists: `https://github.com/Rman21/gosport`.
-- Repository currently contains only the initial `README.md` commit.
 - Local workspace `/Users/rm/Documents/SportIL` has been initialized as a git repository on branch `main`.
 - Local remote `origin` points to `https://github.com/Rman21/gosport.git`.
-- GitHub CLI is not installed locally.
-- Codex GitHub connector is installed but currently returns an internal error in this session.
+- GitHub CLI is installed locally and authenticated as `Rman21`.
 - `.gitignore` excludes generated artifacts such as `node_modules`, `.next`, `.open-next`, `.wrangler`, build output, Playwright reports, `.env`, and local state.
 - GitHub Actions CI workflow has been added at `.github/workflows/ci.yml`.
+- First full project commit has been pushed to `main`.
+- CI uses the official Playwright container so E2E does not depend on a slow browser install step.
 
 Next source-control action:
 
-- Commit and push the project carefully, excluding generated artifacts, local env files, and temporary build output.
-- Confirm the first GitHub Actions run after push.
+- Confirm the first GitHub Actions run is green.
+- Add branch protection for `main` after the first CI pass.
 
 ### Cloudflare
 
