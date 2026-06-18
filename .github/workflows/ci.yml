@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  verify:
+    name: Verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: sportil
+          POSTGRES_USER: sportil
+          POSTGRES_PASSWORD: sportil
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sportil -d sportil"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://sportil:sportil@localhost:5432/sportil
+      NEXT_PUBLIC_SPORTIL_API_BASE_URL: http://127.0.0.1:4100/api/v1
+      NEXT_PUBLIC_SPORTIL_SITE_URL: https://gosport.co.il
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Enable pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.8.0 --activate
+
+      - name: Install dependencies
+        run: corepack pnpm install --frozen-lockfile
+
+      - name: Generate Prisma client
+        run: corepack pnpm db:generate
+
+      - name: Lint
+        run: corepack pnpm lint
+
+      - name: Typecheck
+        run: corepack pnpm typecheck
+
+      - name: Build API packages
+        run: corepack pnpm build:api
+
+      - name: Build web
+        run: corepack pnpm --filter @sportil/web build
+
+      - name: Build Cloudflare Worker artifact
+        run: corepack pnpm --filter @sportil/web cf:build
+
+      - name: Prepare database
+        run: |
+          corepack pnpm db:migrate
+          corepack pnpm db:seed
+
+      - name: Install Playwright browser
+        run: corepack pnpm exec playwright install --with-deps chromium
+
+      - name: E2E
+        run: corepack pnpm exec playwright test

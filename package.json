@@ -1,0 +1,28 @@
+{
+  "name": "sportil",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@11.8.0",
+  "scripts": {
+    "db:generate": "corepack pnpm --filter @sportil/db db:generate",
+    "db:local:start": "scripts/postgres-local.sh start",
+    "db:local:status": "scripts/postgres-local.sh status",
+    "db:local:stop": "scripts/postgres-local.sh stop",
+    "db:migrate": "corepack pnpm --filter @sportil/db db:migrate:deploy",
+    "db:seed": "corepack pnpm --filter @sportil/db db:seed",
+    "dev:web": "corepack pnpm --filter @sportil/web dev",
+    "e2e": "corepack pnpm db:local:start && DATABASE_URL=postgresql://sportil:sportil@localhost:5432/sportil corepack pnpm db:migrate && DATABASE_URL=postgresql://sportil:sportil@localhost:5432/sportil corepack pnpm db:seed && playwright test",
+    "e2e:ui": "corepack pnpm e2e --ui",
+    "build": "corepack pnpm --filter @sportil/web build",
+    "build:api": "corepack pnpm --filter @sportil/db build && corepack pnpm --filter @sportil/payments build && corepack pnpm --filter @sportil/api build",
+    "build:all": "corepack pnpm build:api && corepack pnpm --filter @sportil/web build",
+    "deploy:web:cf": "corepack pnpm --filter @sportil/web cf:deploy",
+    "docker:api:build": "docker build -f Dockerfile.api -t sportil-api:local .",
+    "typecheck": "corepack pnpm -r --if-present typecheck",
+    "lint": "corepack pnpm -r --if-present lint"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.51.1",
+    "typescript": "6.0.3"
+  }
+}

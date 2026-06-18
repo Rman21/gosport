@@ -1,0 +1,17 @@
+.DS_Store
+.env
+.env.*
+!.env.example
+.git
+.local
+.next
+.open-next
+.wrangler-dry-run
+build
+coverage
+dist
+node_modules
+playwright-report
+test-results
+*.log
+*.tsbuildinfo

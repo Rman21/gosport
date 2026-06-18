@@ -1,0 +1,769 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  resident
+  guardian
+  coach
+  school_operator
+  facility_operator
+  city_admin
+  system
+}
+
+enum FacilityKind {
+  court
+  hall
+  sport_center
+  program
+  public_space
+}
+
+enum FacilityStatus {
+  bookable
+  needs_confirmation
+  info_only
+}
+
+enum InventoryKind {
+  court_rental
+  coach_session
+  group_class
+  open_play
+}
+
+enum SourceConfidence {
+  official_info
+  manual_review
+  operator_confirmed
+  live_inventory
+}
+
+enum SyncStatus {
+  fresh
+  stale
+  conflicting
+  blocked
+}
+
+enum HoldStatus {
+  held
+  expired
+  released
+  converted
+}
+
+enum BookingStatus {
+  confirmed
+  cancelled
+  refunded
+}
+
+enum OccupancyStatus {
+  held
+  confirmed
+  cancelled
+  expired
+  released
+}
+
+enum PaymentIntentStatus {
+  requires_confirmation
+  processing
+  succeeded
+  failed
+  cancelled
+  refunded
+}
+
+enum VerificationStatus {
+  live_bookable
+  live_registration
+  active_contact_only
+  info_only
+  needs_verification
+  archived_closed
+}
+
+enum BookingMethod {
+  instant_payment
+  external_registration
+  contact_request
+  phone_whatsapp
+  free_public
+  info_only
+}
+
+enum PaymentMethod {
+  card_supported
+  external_payment
+  no_payment
+  unknown
+}
+
+enum SourceType {
+  official_municipal
+  partner_site
+  external_registration
+  sports_association
+  directory
+  social
+  manual_research
+}
+
+enum OrganizationKind {
+  municipality
+  community_center
+  private_club
+  sports_association
+  school_provider
+  coach_school
+  swim_school
+  fitness_box
+}
+
+enum VerificationTaskStatus {
+  open
+  in_progress
+  verified
+  blocked
+  archived
+}
+
+enum VerificationTaskPriority {
+  low
+  medium
+  high
+  critical
+}
+
+enum VerificationRequestKind {
+  availability_request
+  report_wrong_info
+  claim_facility
+  request_online_booking
+}
+
+enum VerificationRequestStatus {
+  submitted
+  triaged
+  in_progress
+  resolved
+  rejected
+}
+
+model UserAccount {
+  id        String   @id @default(cuid())
+  email     String?  @unique
+  role      UserRole @default(resident)
+  name      Json?
+  preferredLocale String @default("ru") @map("preferred_locale")
+  contactPhone String? @map("contact_phone")
+  familyMembers Json? @map("family_members")
+  favoriteSports String[] @default([]) @map("favorite_sports")
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  bookings       Booking[]
+  holds          BookingHold[]
+  follows        UserFollow[]
+  verificationRequests VerificationRequest[]
+  waitlistEntries WaitlistEntry[]
+
+  @@map("user_accounts")
+}
+
+model Facility {
+  id             String         @id @default(cuid())
+  externalId     String?        @unique @map("external_id")
+  organizationId String?        @map("organization_id")
+  kind           FacilityKind
+  status         FacilityStatus @default(needs_confirmation)
+  verificationStatus VerificationStatus @default(info_only) @map("verification_status")
+  bookingMethod  BookingMethod  @default(contact_request) @map("booking_method")
+  paymentMethod  PaymentMethod  @default(unknown) @map("payment_method")
+  sourceType     SourceType     @default(official_municipal) @map("source_type")
+  name           Json
+  neighborhood   Json?
+  address        Json?
+  contactPhone   String?        @map("contact_phone")
+  whatsapp       String?
+  externalRegistrationUrl String? @map("external_registration_url")
+  confidenceScore Int?          @map("confidence_score")
+  sourceNotes    Json?          @map("source_notes")
+  lastVerifiedAt DateTime?      @map("last_verified_at") @db.Timestamptz(6)
+  sourceUrl      String         @map("source_url")
+  sourceCheckedAt DateTime      @map("source_checked_at") @db.Timestamptz(6)
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime       @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  coachProfiles   CoachProfile[]
+  follows         UserFollow[]
+  openMatches     OpenMatch[]
+  offerings       Offering[]
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  programs        Program[]
+  resources       InventoryResource[]
+  sourceSnapshots SourceSnapshot[]
+  spaces          FacilitySpace[]
+  verificationTasks DataVerificationTask[]
+  verificationRequests VerificationRequest[]
+  waitlistEntries WaitlistEntry[]
+
+  @@index([kind])
+  @@index([status])
+  @@index([organizationId])
+  @@index([verificationStatus, bookingMethod])
+  @@index([sourceType, verificationStatus])
+  @@map("facilities")
+}
+
+model Organization {
+  id                 String             @id @default(cuid())
+  kind               OrganizationKind
+  name               Json
+  description        Json?
+  websiteUrl         String?            @map("website_url")
+  contactPhone       String?            @map("contact_phone")
+  whatsapp           String?
+  sourceType         SourceType         @default(manual_research) @map("source_type")
+  verificationStatus VerificationStatus @default(needs_verification) @map("verification_status")
+  sourceUrl          String?            @map("source_url")
+  sourceNotes        Json?              @map("source_notes")
+  createdAt          DateTime           @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime           @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facilities        Facility[]
+  offerings         Offering[]
+  programs          Program[]
+  verificationTasks DataVerificationTask[]
+
+  @@index([kind, verificationStatus])
+  @@index([sourceType, verificationStatus])
+  @@map("organizations")
+}
+
+model InventoryResource {
+  id               String          @id @default(cuid())
+  facilityId        String          @map("facility_id")
+  offeringId       String?         @map("offering_id")
+  spaceId          String?         @map("space_id")
+  sportId          String?         @map("sport_id")
+  kind             InventoryKind
+  exclusiveUse     Boolean         @default(false) @map("exclusive_use")
+  capacity         Int             @default(1)
+  minAge           Int?            @map("min_age")
+  maxAge           Int?            @map("max_age")
+  name             Json
+  description      Json?
+  sourceConfidence SourceConfidence @default(official_info) @map("source_confidence")
+  syncStatus       SyncStatus       @default(fresh) @map("sync_status")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility    Facility           @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  offering    Offering?          @relation(fields: [offeringId], references: [id], onDelete: SetNull)
+  space       FacilitySpace?     @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  sport       Sport?             @relation(fields: [sportId], references: [id], onDelete: SetNull)
+  slots       BookingSlot[]
+  occupancies BookingOccupancy[]
+
+  @@index([facilityId, kind])
+  @@index([exclusiveUse])
+  @@index([spaceId, kind])
+  @@index([sportId, kind])
+  @@index([offeringId])
+  @@map("inventory_resources")
+}
+
+model BookingSlot {
+  id               String           @id @default(cuid())
+  resourceId       String           @map("resource_id")
+  offeringId       String?          @map("offering_id")
+  startsAt         DateTime         @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime         @map("ends_at") @db.Timestamptz(6)
+  title            Json
+  priceAgorot      Int?             @map("price_agorot")
+  capacity         Int
+  remainingMirror  Int?             @map("remaining_mirror")
+  sourceUrl        String           @map("source_url")
+  sourceConfidence SourceConfidence @default(official_info) @map("source_confidence")
+  syncStatus       SyncStatus       @default(fresh) @map("sync_status")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  offering     Offering?         @relation(fields: [offeringId], references: [id], onDelete: SetNull)
+  resource     InventoryResource @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  capacityRow  SlotCapacity?
+  holds        BookingHold[]
+  bookings     Booking[]
+  occupancies  BookingOccupancy[]
+  waitlistEntries WaitlistEntry[]
+
+  @@index([resourceId, startsAt])
+  @@index([offeringId, startsAt])
+  @@index([sourceConfidence, syncStatus])
+  @@map("booking_slots")
+}
+
+model SlotCapacity {
+  slotId         String   @id @map("slot_id")
+  capacity       Int
+  heldUnits      Int      @default(0) @map("held_units")
+  confirmedUnits Int      @default(0) @map("confirmed_units")
+  updatedAt      DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  slot BookingSlot @relation(fields: [slotId], references: [id], onDelete: Cascade)
+
+  @@map("slot_capacities")
+}
+
+model BookingHold {
+  id             String     @id @default(cuid())
+  userId         String     @map("user_id")
+  slotId         String     @map("slot_id")
+  idempotencyKey String     @unique @map("idempotency_key")
+  participantsCount Int     @default(1) @map("participants_count")
+  requestedUnits Int        @default(1) @map("requested_units")
+  status         HoldStatus @default(held)
+  expiresAt      DateTime   @map("expires_at") @db.Timestamptz(6)
+  createdAt      DateTime   @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime   @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  user        UserAccount        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  slot        BookingSlot        @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  booking     Booking?
+  paymentIntent PaymentIntent?
+  occupancies BookingOccupancy[]
+
+  @@index([userId, status])
+  @@index([slotId, status])
+  @@index([expiresAt])
+  @@map("booking_holds")
+}
+
+model Booking {
+  id             String        @id @default(cuid())
+  holdId         String        @unique @map("hold_id")
+  userId         String        @map("user_id")
+  slotId         String        @map("slot_id")
+  idempotencyKey String        @unique @map("idempotency_key")
+  status         BookingStatus @default(confirmed)
+  confirmedAt    DateTime      @default(now()) @map("confirmed_at") @db.Timestamptz(6)
+  createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime      @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  hold        BookingHold        @relation(fields: [holdId], references: [id], onDelete: Restrict)
+  user        UserAccount        @relation(fields: [userId], references: [id], onDelete: Restrict)
+  slot        BookingSlot        @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  paymentIntent PaymentIntent?
+  occupancies BookingOccupancy[]
+
+  @@index([userId, status])
+  @@index([slotId, status])
+  @@map("bookings")
+}
+
+model BookingOccupancy {
+  id             String          @id @default(cuid())
+  resourceId      String          @map("resource_id")
+  spaceId         String?         @map("space_id")
+  slotId          String          @map("slot_id")
+  holdId          String?         @map("hold_id")
+  bookingId       String?         @map("booking_id")
+  startsAt        DateTime        @map("starts_at") @db.Timestamptz(6)
+  endsAt          DateTime        @map("ends_at") @db.Timestamptz(6)
+  claimedUnits    Int             @default(1) @map("claimed_units")
+  exclusiveUse    Boolean         @default(false) @map("exclusive_use")
+  status          OccupancyStatus @default(held)
+  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime        @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  resource InventoryResource @relation(fields: [resourceId], references: [id], onDelete: Restrict)
+  space    FacilitySpace?    @relation(fields: [spaceId], references: [id], onDelete: Restrict)
+  slot     BookingSlot       @relation(fields: [slotId], references: [id], onDelete: Restrict)
+  hold     BookingHold?      @relation(fields: [holdId], references: [id], onDelete: Restrict)
+  booking  Booking?          @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+
+  @@index([resourceId, startsAt])
+  @@index([spaceId, startsAt])
+  @@index([slotId, status])
+  @@index([holdId])
+  @@index([bookingId])
+  @@map("booking_occupancies")
+}
+
+model Sport {
+  id        String   @id
+  name      Json
+  icon      String?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  capabilities SpaceSportCapability[]
+  openMatches  OpenMatch[]
+  offerings    Offering[]
+  programs     Program[]
+  resources    InventoryResource[]
+
+  @@map("sports")
+}
+
+model FacilitySpace {
+  id          String   @id @default(cuid())
+  facilityId  String   @map("facility_id")
+  name        Json
+  description Json?
+  capacity    Int?
+  indoor      Boolean? @map("indoor")
+  surface     Json?
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility      Facility               @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  capabilities  SpaceSportCapability[]
+  occupancies   BookingOccupancy[]
+  offerings     Offering[]
+  openMatches   OpenMatch[]
+  programs      Program[]
+  resources     InventoryResource[]
+
+  @@index([facilityId])
+  @@map("facility_spaces")
+}
+
+model SpaceSportCapability {
+  id        String   @id @default(cuid())
+  spaceId   String   @map("space_id")
+  sportId   String   @map("sport_id")
+  level     Json?
+  notes     Json?
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  space FacilitySpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  sport Sport         @relation(fields: [sportId], references: [id], onDelete: Cascade)
+
+  @@unique([spaceId, sportId])
+  @@index([sportId])
+  @@map("space_sport_capabilities")
+}
+
+model CoachProfile {
+  id          String   @id @default(cuid())
+  facilityId  String?  @map("facility_id")
+  name        Json
+  bio         Json?
+  sports      Json?
+  languages   String[] @default([])
+  minAge      Int?     @map("min_age")
+  maxAge      Int?     @map("max_age")
+  sourceUrl   String?  @map("source_url")
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt   DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility  Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  follows   UserFollow[]
+  offerings Offering[]
+  programs  Program[]
+
+  @@index([facilityId])
+  @@map("coach_profiles")
+}
+
+model Program {
+  id               String           @id @default(cuid())
+  facilityId       String           @map("facility_id")
+  organizationId   String?          @map("organization_id")
+  spaceId          String?          @map("space_id")
+  sportId          String           @map("sport_id")
+  coachId          String?          @map("coach_id")
+  title            Json
+  description      Json?
+  recurrence       Json?
+  minAge           Int?             @map("min_age")
+  maxAge           Int?             @map("max_age")
+  capacity         Int?
+  remainingMirror  Int?             @map("remaining_mirror")
+  sourceUrl        String?          @map("source_url")
+  externalRegistrationUrl String?    @map("external_registration_url")
+  contactPhone     String?          @map("contact_phone")
+  whatsapp         String?
+  verificationStatus VerificationStatus @default(info_only) @map("verification_status")
+  bookingMethod    BookingMethod    @default(contact_request) @map("booking_method")
+  paymentMethod    PaymentMethod    @default(unknown) @map("payment_method")
+  confidenceScore  Int?             @map("confidence_score")
+  sourceNotes      Json?            @map("source_notes")
+  lastVerifiedAt   DateTime?        @map("last_verified_at") @db.Timestamptz(6)
+  sourceConfidence SourceConfidence @default(official_info) @map("source_confidence")
+  syncStatus       SyncStatus       @default(fresh) @map("sync_status")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  coach           CoachProfile?   @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  facility        Facility        @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  organization    Organization?   @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  space           FacilitySpace?  @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  sport           Sport           @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  follows         UserFollow[]
+  offerings       Offering[]
+  verificationTasks DataVerificationTask[]
+  waitlistEntries WaitlistEntry[]
+
+  @@index([facilityId, sportId])
+  @@index([organizationId])
+  @@index([coachId])
+  @@index([spaceId])
+  @@index([verificationStatus, bookingMethod])
+  @@map("programs")
+}
+
+model Offering {
+  id               String           @id @default(cuid())
+  facilityId       String           @map("facility_id")
+  organizationId   String?          @map("organization_id")
+  spaceId          String?          @map("space_id")
+  sportId          String           @map("sport_id")
+  coachId          String?          @map("coach_id")
+  programId        String?          @map("program_id")
+  kind             InventoryKind
+  title            Json
+  description      Json?
+  minAge           Int?             @map("min_age")
+  maxAge           Int?             @map("max_age")
+  capacity         Int?
+  priceAgorot      Int?             @map("price_agorot")
+  sourceUrl        String?          @map("source_url")
+  externalRegistrationUrl String?    @map("external_registration_url")
+  contactPhone     String?          @map("contact_phone")
+  whatsapp         String?
+  verificationStatus VerificationStatus @default(info_only) @map("verification_status")
+  bookingMethod    BookingMethod    @default(contact_request) @map("booking_method")
+  paymentMethod    PaymentMethod    @default(unknown) @map("payment_method")
+  confidenceScore  Int?             @map("confidence_score")
+  sourceNotes      Json?            @map("source_notes")
+  lastVerifiedAt   DateTime?        @map("last_verified_at") @db.Timestamptz(6)
+  sourceConfidence SourceConfidence @default(official_info) @map("source_confidence")
+  syncStatus       SyncStatus       @default(fresh) @map("sync_status")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  coach     CoachProfile?       @relation(fields: [coachId], references: [id], onDelete: SetNull)
+  facility  Facility            @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  organization Organization?     @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  program   Program?            @relation(fields: [programId], references: [id], onDelete: SetNull)
+  space     FacilitySpace?      @relation(fields: [spaceId], references: [id], onDelete: SetNull)
+  sport     Sport               @relation(fields: [sportId], references: [id], onDelete: Restrict)
+  resources InventoryResource[]
+  slots     BookingSlot[]
+  verificationTasks DataVerificationTask[]
+
+  @@index([facilityId, kind])
+  @@index([organizationId])
+  @@index([spaceId, kind])
+  @@index([sportId, kind])
+  @@index([coachId])
+  @@index([programId])
+  @@index([verificationStatus, bookingMethod])
+  @@map("offerings")
+}
+
+model DataVerificationTask {
+  id             String                   @id @default(cuid())
+  organizationId String?                  @map("organization_id")
+  facilityId     String?                  @map("facility_id")
+  offeringId     String?                  @map("offering_id")
+  programId      String?                  @map("program_id")
+  title          Json
+  notes          Json?
+  status         VerificationTaskStatus   @default(open)
+  priority       VerificationTaskPriority @default(medium)
+  sourceUrl      String?                  @map("source_url")
+  dueAt          DateTime?                @map("due_at") @db.Timestamptz(6)
+  createdAt      DateTime                 @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt      DateTime                 @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  organization Organization? @relation(fields: [organizationId], references: [id], onDelete: SetNull)
+  facility     Facility?     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  offering     Offering?     @relation(fields: [offeringId], references: [id], onDelete: Cascade)
+  program      Program?      @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@index([status, priority])
+  @@index([facilityId, status])
+  @@index([offeringId, status])
+  @@index([programId, status])
+  @@index([organizationId, status])
+  @@map("data_verification_tasks")
+}
+
+model VerificationRequest {
+  id              String                    @id @default(cuid())
+  userId          String?                   @map("user_id")
+  facilityId      String?                   @map("facility_id")
+  kind            VerificationRequestKind
+  status          VerificationRequestStatus @default(submitted)
+  preferredLocale String                    @default("ru") @map("preferred_locale")
+  residentName    String?                   @map("resident_name")
+  contactEmail    String?                   @map("contact_email")
+  contactPhone    String?                   @map("contact_phone")
+  message         String?
+  idempotencyKey  String?                   @unique @map("idempotency_key")
+  payloadRedacted Json?                     @map("payload_redacted")
+  createdAt       DateTime                  @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt       DateTime                  @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility Facility?    @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+  user     UserAccount? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId, status])
+  @@index([facilityId, status])
+  @@index([kind, status])
+  @@index([createdAt])
+  @@map("verification_requests")
+}
+
+model OpenMatch {
+  id               String           @id @default(cuid())
+  facilityId       String           @map("facility_id")
+  spaceId          String           @map("space_id")
+  sportId          String           @map("sport_id")
+  title            Json
+  level            Json?
+  minAge           Int?             @map("min_age")
+  maxAge           Int?             @map("max_age")
+  capacity         Int
+  confirmedPlayers Int              @default(0) @map("confirmed_players")
+  startsAt         DateTime         @map("starts_at") @db.Timestamptz(6)
+  endsAt           DateTime         @map("ends_at") @db.Timestamptz(6)
+  safetyMode       String           @default("templates_only") @map("safety_mode")
+  status           String           @default("open")
+  sourceConfidence SourceConfidence @default(official_info) @map("source_confidence")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt        DateTime         @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility Facility      @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  space    FacilitySpace @relation(fields: [spaceId], references: [id], onDelete: Cascade)
+  sport    Sport         @relation(fields: [sportId], references: [id], onDelete: Restrict)
+
+  @@index([facilityId, startsAt])
+  @@index([sportId, startsAt])
+  @@index([spaceId, startsAt])
+  @@map("open_matches")
+}
+
+model UserFollow {
+  id         String   @id @default(cuid())
+  userId     String   @map("user_id")
+  facilityId String?  @map("facility_id")
+  coachId    String?  @map("coach_id")
+  programId  String?  @map("program_id")
+  createdAt  DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  coach    CoachProfile? @relation(fields: [coachId], references: [id], onDelete: Cascade)
+  facility Facility?     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  program  Program?      @relation(fields: [programId], references: [id], onDelete: Cascade)
+  user     UserAccount   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([facilityId])
+  @@index([coachId])
+  @@index([programId])
+  @@map("user_follows")
+}
+
+model WaitlistEntry {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  facilityId   String   @map("facility_id")
+  programId    String?  @map("program_id")
+  slotId       String?  @map("slot_id")
+  requestedAge Int?     @map("requested_age")
+  status       String   @default("waiting")
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt    DateTime @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  facility Facility     @relation(fields: [facilityId], references: [id], onDelete: Cascade)
+  program  Program?     @relation(fields: [programId], references: [id], onDelete: SetNull)
+  slot     BookingSlot? @relation(fields: [slotId], references: [id], onDelete: SetNull)
+  user     UserAccount  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, status])
+  @@index([facilityId, status])
+  @@index([programId, status])
+  @@index([slotId, status])
+  @@map("waitlist_entries")
+}
+
+model PaymentIntent {
+  id                 String              @id @default(cuid())
+  provider           String
+  providerIntentId   String              @unique @map("provider_intent_id")
+  holdId             String              @unique @map("hold_id")
+  bookingId          String?             @unique @map("booking_id")
+  amountAgorot       Int                 @map("amount_agorot")
+  currency           String              @default("ILS")
+  status             PaymentIntentStatus @default(requires_confirmation)
+  idempotencyKey     String              @unique @map("idempotency_key")
+  redactedMethod     Json?               @map("redacted_method")
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(6)
+  updatedAt          DateTime            @updatedAt @map("updated_at") @db.Timestamptz(6)
+
+  hold    BookingHold @relation(fields: [holdId], references: [id], onDelete: Restrict)
+  booking Booking?    @relation(fields: [bookingId], references: [id], onDelete: Restrict)
+  events  PaymentEvent[]
+
+  @@index([status])
+  @@map("payment_intents")
+}
+
+model PaymentEvent {
+  id              String   @id @default(cuid())
+  paymentIntentId String   @map("payment_intent_id")
+  providerEventId String   @unique @map("provider_event_id")
+  eventType       String   @map("event_type")
+  payloadRedacted Json     @map("payload_redacted")
+  receivedAt      DateTime @default(now()) @map("received_at") @db.Timestamptz(6)
+
+  paymentIntent PaymentIntent @relation(fields: [paymentIntentId], references: [id], onDelete: Cascade)
+
+  @@index([paymentIntentId])
+  @@map("payment_events")
+}
+
+model SourceSnapshot {
+  id               String           @id @default(cuid())
+  facilityId       String?          @map("facility_id")
+  sourceUrl        String           @map("source_url")
+  sourceObservedAt DateTime         @map("source_observed_at") @db.Timestamptz(6)
+  sourceConfidence SourceConfidence @map("source_confidence")
+  syncStatus       SyncStatus       @map("sync_status")
+  payloadRedacted  Json             @map("payload_redacted")
+  createdAt        DateTime         @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  facility Facility? @relation(fields: [facilityId], references: [id], onDelete: SetNull)
+
+  @@index([sourceConfidence, syncStatus])
+  @@index([sourceObservedAt])
+  @@map("source_snapshots")
+}
+
+model AuditEvent {
+  id             String   @id @default(cuid())
+  actorUserId    String?  @map("actor_user_id")
+  actorRole      UserRole @default(system) @map("actor_role")
+  action         String
+  subjectType    String   @map("subject_type")
+  subjectId      String   @map("subject_id")
+  idempotencyKey String?  @map("idempotency_key")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at") @db.Timestamptz(6)
+
+  @@index([subjectType, subjectId])
+  @@index([actorUserId, createdAt])
+  @@index([idempotencyKey])
+  @@map("audit_events")
+}

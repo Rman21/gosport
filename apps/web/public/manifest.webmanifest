@@ -1,0 +1,55 @@
+{
+  "name": "SportIL",
+  "short_name": "SportIL",
+  "description": "Municipal sport search and booking service for Netanya residents.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f6f8fb",
+  "theme_color": "#005eb8",
+  "categories": ["sports", "health", "lifestyle"],
+  "icons": [
+    {
+      "src": "/icons/pwa-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/pwa-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/maskable-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icons/maskable-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "עברית",
+      "short_name": "עברית",
+      "url": "/he"
+    },
+    {
+      "name": "Русский",
+      "short_name": "Русский",
+      "url": "/ru"
+    },
+    {
+      "name": "English",
+      "short_name": "English",
+      "url": "/en"
+    }
+  ]
+}
