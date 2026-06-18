@@ -36,10 +36,10 @@ Status as of 2026-06-19:
 - GitHub Actions CI workflow has been added at `.github/workflows/ci.yml`.
 - First full project commit has been pushed to `main`.
 - CI uses the official Playwright container so E2E does not depend on a slow browser install step.
+- First hardened GitHub Actions run passed: lint, typecheck, API build, web build, Cloudflare Worker artifact build, Prisma migration/seed, and Playwright E2E.
 
 Next source-control action:
 
-- Confirm the first GitHub Actions run is green.
 - Add branch protection for `main` after the first CI pass.
 
 ### Cloudflare

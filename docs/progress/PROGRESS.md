@@ -1145,3 +1145,15 @@ Reason:
 Next action:
 
 - Cancel the stale CI run, push the workflow hardening commit, and confirm the new run is green.
+
+Result:
+
+- Canceled the stale run `27794711364`.
+- Pushed commit `ea07d2b` (`Harden GitHub CI Playwright runner`) to `main`.
+- GitHub Actions run `27795147222` passed in `3m19s`.
+- Remote CI now covers lint, typecheck, API build, web build, Cloudflare Worker artifact build, Prisma migration/seed against PostgreSQL 17, Playwright browser verification, and E2E.
+
+Next action:
+
+- Add branch protection for `main`.
+- When Cloudflare nameserver activation is complete, create production deploy secrets and deploy the web Worker for `gosport.co.il` / `www.gosport.co.il`.
