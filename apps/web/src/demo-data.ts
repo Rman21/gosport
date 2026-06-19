@@ -7,6 +7,10 @@ import type {
   LocalizedText,
   SportCode,
 } from "@sportil/types";
+import { netanyaCatalogFacilities } from "@/netanya-catalog";
+import { sportLabels } from "@/sport-taxonomy";
+
+export { sportLabels };
 
 export type AgeFilter = "adults" | "all" | "kids" | "teens";
 export type FeatureFilter = "all" | FacilityFeature;
@@ -102,31 +106,7 @@ function slot(overrides: FacilitySlot): FacilitySlot {
   return overrides;
 }
 
-export const sportLabels: Record<SportCode, LocalizedText> = {
-  adapted_sport: text("ספורט מותאם", "Адаптированный спорт", "Adapted sport"),
-  basketball: text("כדורסל", "Баскетбол", "Basketball"),
-  badminton: text("בדמינטון", "Бадминтон", "Badminton"),
-  capoeira: text("קפוארה", "Капоэйра", "Capoeira"),
-  crossfit: text("קרוספיט", "Кроссфит", "CrossFit"),
-  dance: text("מחול", "Танцы", "Dance"),
-  fitness: text("כושר", "Фитнес", "Fitness"),
-  football: text("כדורגל", "Футбол", "Football"),
-  futsal: text("קטרגל", "Футзал", "Futsal"),
-  gymnastics: text("התעמלות", "Гимнастика", "Gymnastics"),
-  judo: text("ג'ודו", "Дзюдо", "Judo"),
-  karate: text("קראטה", "Карате", "Karate"),
-  krav_maga: text("קרב מגע", "Крав-мага", "Krav Maga"),
-  padel: text("פאדל", "Падел", "Padel"),
-  roller_skating: text("רולר", "Ролики", "Roller skating"),
-  skateboarding: text("סקייטבורד", "Скейтборд", "Skateboarding"),
-  swimming: text("שחייה", "Плавание", "Swimming"),
-  table_tennis: text("טניס שולחן", "Настольный теннис", "Table tennis"),
-  taekwondo: text("טאקוונדו", "Тхэквондо", "Taekwondo"),
-  tennis: text("טניס", "Теннис", "Tennis"),
-  zumba: text("זומבה", "Зумба", "Zumba"),
-};
-
-export const facilities: FacilityPreview[] = [
+const curatedFacilities: FacilityPreview[] = [
   {
     accessibility: "yes",
     address: text("בני בנימין 1", "Бней Биньямин 1", "Bnei Binyamin 1"),
@@ -1407,7 +1387,7 @@ export const facilities: FacilityPreview[] = [
     neighborhood: text("קריית השרון / המכללה", "Кирьят ха-Шарон / колледж", "Kiryat HaSharon / College"),
     parking: true,
     primarySlotId: "collegym-kids-multisport-slot",
-    searchTerms: ["collegym", "swimming", "pool", "tennis", "basketball", "dance", "gymnastics", "дети", "плавание"],
+    searchTerms: ["collegym", "swimming", "pool", "tennis", "basketball", "dance", "gymnastics", "spinning", "дети", "плавание"],
     spaces: [
       {
         capacity: 20,
@@ -1424,7 +1404,7 @@ export const facilities: FacilityPreview[] = [
         id: "collegym-studios",
         indoor: true,
         name: text("סטודיו חוגים", "Студия секций", "Classes studio"),
-        sports: ["judo", "capoeira", "gymnastics", "dance", "basketball", "football"],
+        sports: ["judo", "capoeira", "gymnastics", "dance", "basketball", "football", "spinning", "fitness"],
         surface: text("סטודיו", "Студия", "Studio"),
       },
     ],
@@ -1472,6 +1452,33 @@ export const facilities: FacilityPreview[] = [
         syncStatus: "stale",
         time: "אחה\"צ",
         title: text("חוגי ילדים בקולג'ים", "Детские секции Collegym", "Collegym kids classes"),
+      }),
+      slot({
+        ageRange: text("לפי מערכת המועדון", "Уточнить в центре", "Confirm with center"),
+        capacity: 1,
+        confidence: "manual_review",
+        date: "2026-06-19",
+        day: text("לוח זמנים לבדיקה", "Расписание уточнить", "Schedule to confirm"),
+        durationMinutes: 45,
+        group: text("סטודיו", "Студия", "Studio"),
+        id: "collegym-spinning-catalog-slot",
+        inventoryKind: "group_class",
+        maxAge: 99,
+        minAge: 16,
+        mode: "mirror",
+        participantNote: text(
+          "נוסף מקטלוג Netanya 2026; נדרש אימות לפני הרשמה.",
+          "Добавлено из каталога Netanya 2026; перед записью нужно подтвердить расписание.",
+          "Added from the 2026 Netanya catalog; timetable must be confirmed before registration.",
+        ),
+        priceNis: 0,
+        remaining: 1,
+        sourceUrl: sourceUrls.collegym,
+        spaceId: "collegym-studios",
+        sportCode: "spinning",
+        syncStatus: "stale",
+        time: "ללא שעה קבועה",
+        title: text("ספינינג", "Spinning — уточнить", "Spinning — confirm"),
       }),
     ],
     source: {
@@ -2008,7 +2015,7 @@ export const facilities: FacilityPreview[] = [
     neighborhood: text("פולג / גרין ביץ'", "Полег / Green Beach", "Poleg / Green Beach"),
     parking: "unknown",
     primarySlotId: "crossfit-green-beach-kids-slot",
-    searchTerms: ["crossfit", "fitness", "kids", "hyrox", "gymnastics", "кроссфит", "фитнес"],
+    searchTerms: ["crossfit", "fitness", "kids", "hyrox", "weightlifting", "gymnastics", "кроссфит", "фитнес"],
     spaces: [
       {
         capacity: 16,
@@ -2016,7 +2023,7 @@ export const facilities: FacilityPreview[] = [
         id: "crossfit-green-beach-floor",
         indoor: false,
         name: text("רחבת אימון", "Тренировочная зона", "Training floor"),
-        sports: ["crossfit", "fitness", "gymnastics"],
+        sports: ["crossfit", "fitness", "gymnastics", "hyrox", "weightlifting"],
         surface: text("משטח פונקציונלי", "Функциональное покрытие", "Functional surface"),
       },
     ],
@@ -2078,6 +2085,62 @@ export const facilities: FacilityPreview[] = [
         syncStatus: "stale",
         time: "19:00",
         title: text("קרוספיט ילדים ונוער", "CrossFit дети и подростки", "CrossFit kids and youth"),
+      }),
+      slot({
+        ageRange: text("לפי מערכת המועדון", "Уточнить в клубе", "Confirm with club"),
+        capacity: 1,
+        confidence: "manual_review",
+        date: "2026-06-19",
+        day: text("לוח זמנים לבדיקה", "Расписание уточнить", "Schedule to confirm"),
+        durationMinutes: 60,
+        group: text("אימון פונקציונלי", "Функциональная тренировка", "Functional training"),
+        id: "crossfit-green-beach-hyrox-catalog-slot",
+        instructor: text("צוות קרוספיט", "Команда CrossFit", "CrossFit team"),
+        inventoryKind: "group_class",
+        maxAge: 99,
+        minAge: 16,
+        mode: "mirror",
+        participantNote: text(
+          "נוסף מקטלוג Netanya 2026; נדרש אימות לפני הרשמה.",
+          "Добавлено из каталога Netanya 2026; перед записью нужно подтвердить расписание.",
+          "Added from the 2026 Netanya catalog; timetable must be confirmed before registration.",
+        ),
+        priceNis: 0,
+        remaining: 1,
+        sourceUrl: sourceUrls.crossfitGreenBeach,
+        spaceId: "crossfit-green-beach-floor",
+        sportCode: "hyrox",
+        syncStatus: "stale",
+        time: "ללא שעה קבועה",
+        title: text("HYROX", "HYROX — уточнить", "HYROX — confirm"),
+      }),
+      slot({
+        ageRange: text("לפי מערכת המועדון", "Уточнить в клубе", "Confirm with club"),
+        capacity: 1,
+        confidence: "manual_review",
+        date: "2026-06-19",
+        day: text("לוח זמנים לבדיקה", "Расписание уточнить", "Schedule to confirm"),
+        durationMinutes: 60,
+        group: text("אימון כוח", "Силовая тренировка", "Strength training"),
+        id: "crossfit-green-beach-weightlifting-catalog-slot",
+        instructor: text("צוות קרוספיט", "Команда CrossFit", "CrossFit team"),
+        inventoryKind: "group_class",
+        maxAge: 99,
+        minAge: 16,
+        mode: "mirror",
+        participantNote: text(
+          "נוסף מקטלוג Netanya 2026; נדרש אימות לפני הרשמה.",
+          "Добавлено из каталога Netanya 2026; перед записью нужно подтвердить расписание.",
+          "Added from the 2026 Netanya catalog; timetable must be confirmed before registration.",
+        ),
+        priceNis: 0,
+        remaining: 1,
+        sourceUrl: sourceUrls.crossfitGreenBeach,
+        spaceId: "crossfit-green-beach-floor",
+        sportCode: "weightlifting",
+        syncStatus: "stale",
+        time: "ללא שעה קבועה",
+        title: text("הרמת משקולות", "Тяжелая атлетика — уточнить", "Weightlifting — confirm"),
       }),
     ],
     source: {
@@ -2200,6 +2263,8 @@ export const facilities: FacilityPreview[] = [
     tone: "danger",
   },
 ];
+
+export const facilities: FacilityPreview[] = [...curatedFacilities, ...netanyaCatalogFacilities];
 
 export type DataVerificationTaskPreview = {
   facilityId?: string;
@@ -2361,6 +2426,14 @@ export function isSlotCapacityTracked(slotItem: FacilitySlot) {
 
 export function formatSlotAvailability(slotItem: FacilitySlot, locale: Locale) {
   if (!isSlotCapacityTracked(slotItem)) {
+    if (slotItem.inventoryKind !== "open_play" && slotItem.inventoryKind !== "court_rental") {
+      return {
+        en: "Schedule to confirm",
+        he: "לוח זמנים לבדיקה",
+        ru: "Расписание уточнить",
+      }[locale];
+    }
+
     return {
       en: "Open to public",
       he: "פתוח לציבור",

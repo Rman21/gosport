@@ -1213,3 +1213,29 @@ Next action:
 
 - Keep checking authoritative `co.il` NS records.
 - If the status remains unchanged, contact Internic/Interspace support with the exact evidence: portal success, WHOIS correct, `co.il` authoritative `NXDOMAIN`.
+
+### 2026-06-19 14:08 IDT - Netanya sports catalog imported into the site
+
+Objective: use `netanya_sports_catalog_2026.xlsx` as the source for a fuller Netanya sport catalog while keeping unverified records safe and request-only.
+
+Changed:
+
+- Added a shared sport taxonomy for the web UI.
+- Expanded `SportCode` with the additional real sports and activities from the workbook, including pilates, yoga, volleyball, handball, climbing, athletics, BJJ/MMA, sambo, ice skating, hockey, HYROX, TRX, spinning, hydrotherapy, and related categories.
+- Generated a supplemental web catalog from the workbook: 127 imported rows from 141 Excel rows.
+- Skipped 14 rows that already have richer curated cards, then added missing catalog-only sport slots to those curated cards where needed, such as spinning at Collegym and HYROX/weightlifting at CrossFit Green Beach.
+- Imported catalog entries are shown as safe `mirror`/confirmation records: no instant booking, no fake seat counts, no payment promise, and schedule shown as `Расписание уточнить` until operator verification.
+- Added `.wrangler/**` to the web ESLint ignore list so generated Cloudflare dry-run artifacts are not linted.
+
+Verification:
+
+- `corepack pnpm typecheck` passed.
+- `corepack pnpm lint` passed.
+- `corepack pnpm build:all` passed; Next generated 881 static pages.
+- `corepack pnpm e2e` passed: 2 tests.
+- Local HTML checks confirmed new dropdown sports and result pages for `climbing`, `handball`, and `pilates`.
+- Playwright screenshots captured mobile `pilates` and desktop `climbing` pages without layout breakage.
+
+Next action:
+
+- Review whether the generated catalog should also be promoted into the Prisma seed/API repository, or remain web-static until the operator verification workflow claims each facility.
