@@ -1159,3 +1159,31 @@ Next action:
 
 - Decide whether to upgrade GitHub, make the repository public later, or keep manual PR discipline until branch protection is available.
 - When Cloudflare nameserver activation is complete, create production deploy secrets and deploy the web Worker for `gosport.co.il` / `www.gosport.co.il`.
+
+### 2026-06-19 10:35 IDT - Cloudflare deploy readiness and DNS blocker
+
+Objective: check whether `gosport.co.il` is ready for public Cloudflare Worker deploy.
+
+Findings:
+
+- WHOIS shows `gosport.co.il` assigned on `2026-06-19`, valid through `2027-06-19`, registrar `InterSpace Ltd`.
+- WHOIS lists the expected Cloudflare nameservers: `june.ns.cloudflare.com` and `keanu.ns.cloudflare.com`.
+- Cloudflare authoritative nameservers answer correctly for the zone.
+- Authoritative `co.il` nameservers still return `NXDOMAIN` for `gosport.co.il`; public resolvers therefore return no NS records yet.
+- Wrangler is authenticated to account `668a85f81bd776eb91becb7b4d929f86` as `rmanilov21@gmail.com` and has Workers write permissions.
+
+Verification:
+
+- `NEXT_PUBLIC_SPORTIL_SITE_URL=https://gosport.co.il NEXT_PUBLIC_SPORTIL_API_BASE_URL=https://api.gosport.co.il/api/v1 corepack pnpm --filter @sportil/web cf:build` passed.
+- `corepack pnpm --filter @sportil/web exec wrangler deploy .open-next/worker.js --config wrangler.jsonc --dry-run --outdir .wrangler/dry-run` passed.
+- Dry-run read 52 asset files, confirmed `ASSETS` and `WORKER_SELF_REFERENCE` bindings, and reported a 5.56 MiB Worker upload package.
+
+Decision:
+
+- Do not deploy the public custom-domain Worker until `co.il` publishes the delegation; otherwise the domain will still be unreachable and troubleshooting becomes noisier.
+
+Next action:
+
+- Continue DNS checks.
+- If `co.il` remains `NXDOMAIN`, confirm with Internic/Interspace that the assignment and NS update have been published to the live registry zone.
+- Once public NS resolves to `june`/`keanu`, deploy the web Worker for `gosport.co.il` and `www.gosport.co.il`, then configure `api.gosport.co.il`.

@@ -49,12 +49,20 @@ Next source-control action:
 Already done:
 
 - `gosport.co.il` zone added.
-- Nameservers changed at Internic/Interspace.
+- Nameservers changed at Internic/Interspace and visible in WHOIS as `june.ns.cloudflare.com` / `keanu.ns.cloudflare.com`.
 - Worker custom domains prepared in code: `gosport.co.il`, `www.gosport.co.il`.
+- Cloudflare authoritative nameservers answer for the zone.
+- Local Cloudflare Worker production build and Wrangler dry-run passed.
+
+Current DNS blocker as of 2026-06-19 10:35 IDT:
+
+- Authoritative `co.il` nameservers still return `NXDOMAIN` for `gosport.co.il`.
+- Public resolvers therefore do not yet return NS records.
+- Do not deploy the public custom-domain Worker until `co.il` publishes the delegation.
 
 Register/configure next:
 
-- Cloudflare API token for Workers deploy with least privilege.
+- Cloudflare API token for GitHub Actions Workers deploy with least privilege.
 - Cloudflare Turnstile widget for public request/report/claim forms.
 - Cloudflare Web Analytics for low-friction public analytics.
 - Optional R2 bucket only if admin/user image uploads are needed in month one.
