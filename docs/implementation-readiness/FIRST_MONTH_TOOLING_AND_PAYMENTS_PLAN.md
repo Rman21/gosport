@@ -217,6 +217,14 @@ Bookability rule:
 10. Build provider adapter spike for Grow or Tranzila in sandbox/test mode.
 11. Keep real public payments disabled until legal and merchant-of-record decisions are signed off.
 
+Current deployment status, 2026-06-19 12:42 IDT:
+
+- GitHub repo and CI are configured and passing.
+- Cloudflare Worker build and dry-run deploy are passing.
+- Internic accepted a DNS records update for `gosport.co.il` with `june.ns.cloudflare.com` and `keanu.ns.cloudflare.com`.
+- WHOIS and Cloudflare authoritative DNS are correct.
+- Authoritative `co.il` nameservers still return `NXDOMAIN`, so public deployment is waiting on live registry-zone publication.
+
 ## Not In Month One
 
 - Native iOS/Android app.

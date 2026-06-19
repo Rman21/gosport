@@ -1187,3 +1187,29 @@ Next action:
 - Continue DNS checks.
 - If `co.il` remains `NXDOMAIN`, confirm with Internic/Interspace that the assignment and NS update have been published to the live registry zone.
 - Once public NS resolves to `june`/`keanu`, deploy the web Worker for `gosport.co.il` and `www.gosport.co.il`, then configure `api.gosport.co.il`.
+
+### 2026-06-19 12:42 IDT - Internic DNS update resubmitted
+
+Objective: remove any possible registrar-side stale DNS state for `gosport.co.il`.
+
+Action:
+
+- In the Internic DNS records screen for `gosport.co.il`, confirmed the nameserver fields are `june.ns.cloudflare.com` and `keanu.ns.cloudflare.com`.
+- Submitted `Update DNS records` after owner confirmation.
+- Internic returned `Domain Names Updated successfully`.
+
+Verification:
+
+- WHOIS still lists the expected Cloudflare nameservers.
+- Cloudflare authoritative nameservers answer with `june.ns.cloudflare.com` and `keanu.ns.cloudflare.com`.
+- Public resolvers `1.1.1.1`, `8.8.8.8`, and `9.9.9.9` still return no NS records.
+- Authoritative `co.il` nameservers `nsa.ns.il`, `ns1.ns.il`, and `ns3.ns.il` still return `NXDOMAIN`; current `co.il` SOA serial observed: `2026061941`.
+
+Current blocker:
+
+- The registrar UI and WHOIS are correct, but the live `co.il` zone has not published the delegation yet. Public Cloudflare Worker deployment remains blocked until the registry zone stops returning `NXDOMAIN`.
+
+Next action:
+
+- Keep checking authoritative `co.il` NS records.
+- If the status remains unchanged, contact Internic/Interspace support with the exact evidence: portal success, WHOIS correct, `co.il` authoritative `NXDOMAIN`.
